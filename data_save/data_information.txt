@@ -1,0 +1,8 @@
+## Data Availability
+
+The dataset used in this project is publicly available at Zenodo:
+
+- **Dataset**: KET-Unet Experimental Data
+- **DOI**: https://doi.org/10.5281/zenodo.1234567
+
+Due to GitHub size limitations, the data are hosted externally.
