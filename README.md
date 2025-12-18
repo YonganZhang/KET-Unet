@@ -350,7 +350,6 @@ Academic research use only (license will be finalized upon public release).
 
 ## 13. Contact
 For questions, bug reports, or collaboration:
-- Maintainer: **(Your name / lab / email here)**
 - Please open a GitHub Issue with:
   - OS, Python version, PyTorch version
   - checkpoint path used
@@ -360,5 +359,6 @@ For questions, bug reports, or collaboration:
 
 ### Acknowledgement
 This repository implements the denoising component (**KET-UNet**) of the broader **DAI2SY** framework for AI-enabled atomic-scale dynamics analysis in STEM.
+
 
 
