@@ -133,7 +133,7 @@ python train.py
 Edit the checkpoint path in `test.py`:
 
 ```python
-test_main(args, model_file_path="model_save/--16点39分--KET_UNet--/params/_2_199_0.pth")
+test_main(args, model_file_path)
 ```
 
 Then run:
@@ -364,3 +364,4 @@ For questions, bug reports, or collaboration:
 
 ### Acknowledgement
 This repository implements the denoising component (**KET-UNet**) of the broader **DAI2SY** framework for AI-enabled atomic-scale dynamics analysis in STEM.
+
