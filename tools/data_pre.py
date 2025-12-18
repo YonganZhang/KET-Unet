@@ -38,7 +38,7 @@ def natural_key(s):
 class MyDataset(Dataset):
     def __init__(self, path):
         self.image_path = os.path.join(path, 'input')
-        self.label_path = os.path.join(path, 'lable')
+        self.label_path = os.path.join(path, 'label')
 
         self.name = sorted(os.listdir(self.label_path), key=natural_key)
 
