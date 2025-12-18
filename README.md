@@ -57,8 +57,6 @@ Trajectory statistics (vibration vs hopping, directionality, energy landscape pr
 ## 2. Repository Structure
 
 ```
-Github
-├── .idea
 ├── data_save
 ├── KET_Unet
 │   └── KET_Unet.py
@@ -359,6 +357,7 @@ For questions, bug reports, or collaboration:
 
 ### Acknowledgement
 This repository implements the denoising component (**KET-UNet**) of the broader **DAI2SY** framework for AI-enabled atomic-scale dynamics analysis in STEM.
+
 
 
 
