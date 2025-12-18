@@ -266,10 +266,6 @@ model_save/--TIME--KET_UNet--/params/_2_199_0.pth
 The outputs go to:
 ```
 model_save/--TIME--KET_UNet--/
-  --HH--MM--测试输出结果/
-  --HH--MM--测试输入结果/
-  --HH--MM--测试输入和输出结果/
-  --HH--MM--误差结果.xlsx
 ```
 
 ### 8.3 Metrics notes
@@ -307,10 +303,10 @@ skimage.metrics.peak_signal_noise_ratio
 - `model_save/.../params/*.pth`
 
 **Writes**
-- `model_save/.../--HH--MM--测试输出结果/*.png`
-- `model_save/.../--HH--MM--测试输入结果/*.png`
-- `model_save/.../--HH--MM--测试输入和输出结果/*.png`
-- `model_save/.../--HH--MM--误差结果.xlsx`
+- `model_save/.../--HH--MM--/*.png`
+- `model_save/.../--HH--MM--/*.png`
+- `model_save/.../--HH--MM--/*.png`
+- `model_save/.../--HH--MM--.xlsx`
 
 ---
 
@@ -364,4 +360,5 @@ For questions, bug reports, or collaboration:
 
 ### Acknowledgement
 This repository implements the denoising component (**KET-UNet**) of the broader **DAI2SY** framework for AI-enabled atomic-scale dynamics analysis in STEM.
+
 
