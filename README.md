@@ -141,6 +141,24 @@ python test.py
 
 ---
 
+
+### 4.4 Online Demo (Coze Bot)
+
+**Note:** This model has been deployed as an AI agent on the Coze platform, allowing users to perform denoising through conversational interaction without local installation.
+
+- **Agent Link:** [https://www.coze.cn/s/6rr38GMmSzI/](https://www.coze.cn/s/6rr38GMmSzI/)
+
+### Usage Instructions
+1. Open the link above to access the Coze agent
+2. Upload the image you want to denoise (supports common image formats)
+3. The agent will return the denoised image result
+
+### Important Notes
+- Due to server computing limitations, **consecutive rapid uploads of multiple images may result in 500 errors**
+- If this occurs, please **delete the current conversation history** and start a new upload
+- We recommend focusing on single-image denoising per conversation session
+- For the data images in this demo, you can choose any image from Zenodo DOI / link: https://zenodo.org/records/17980551.
+
 ## 5. Environment & Dependencies
 
 ### Recommended
@@ -357,6 +375,7 @@ For questions, bug reports, or collaboration:
 
 ### Acknowledgement
 This repository implements the denoising component (**KET-UNet**) of the broader **DAI2SY** framework for AI-enabled atomic-scale dynamics analysis in STEM.
+
 
 
 
