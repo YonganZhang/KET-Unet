@@ -15,6 +15,8 @@
 - [2. Repository Structure](#2-repository-structure)
 - [3. Dataset (Zenodo)](#3-dataset-zenodo)
 - [4. Quick Start](#4-quick-start)
+  - [4.4 Online Demo (Coze Bot)](#44-online-demo-coze-bot)
+  - [4.5 Detection & Tracking (YOLO11 + ByteTrack, External)](#45-detection--tracking-yolo11--bytetrack-external)
 - [5. Environment & Dependencies](#5-environment--dependencies)
 - [6. Training (Two-stage S2RTL)](#6-training-two-stage-s2rtl)
 - [7. Checkpoints & Logs](#7-checkpoints--logs)
@@ -38,7 +40,7 @@ Raw in situ AC-STEM frames (low-dose, noisy, strong support contrast)
 [KET-UNet denoising]  ← this repo (train.py / test.py)
         │
         ▼
-YOLO-based single-atom detection + association tracking (e.g., ByteTrack)  ← external
+YOLO11-based single-atom detection + association tracking (e.g., ByteTrack)  ← external
         │
         ▼
 Trajectory statistics (vibration vs hopping, directionality, energy landscape probing)
@@ -50,7 +52,131 @@ Trajectory statistics (vibration vs hopping, directionality, energy landscape pr
 - ✅ **Testing & metric export** (`test.py`) including image dumps and an Excel report (MSE / PSNR / MAE)
 - ✅ **Dataset loader utilities** (`tools/data_pre.py`) and visualization helpers (`tools/utils.py`)
 
-> Note: The **tracking module (YOLO + ByteTrack)** is part of the full DAI2SY framework but is not included in this repo.
+> Note: The full DAI2SY framework includes a **detection + tracking** module that calls **Ultralytics YOLO11** and a standard association tracker (e.g., ByteTrack).  
+> We do **not** duplicate YOLO source code in this repo. Instead, we provide minimal, reproducible wrapper code and commands for calling upstream YOLO11.
+
+---
+
+## Tracking Module (External): YOLO11 + ByteTrack
+
+### Why YOLO code is not bundled here
+Ultralytics YOLO is distributed under the **AGPL-3.0 license by default**. To avoid duplicating upstream code and to keep this repository focused on denoising, we do not copy YOLO internals into this repo.  
+Instead, we provide **minimal wrapper scripts** that call the official Ultralytics implementation. This is sufficient for reproducing the detection/tracking stage used in the full pipeline.
+
+### What you should cite / acknowledge
+If you use the detection/tracking stage, please acknowledge:
+- **Ultralytics YOLO11** (upstream implementation, models, and CLI/Python API)
+- **ByteTrack** (or your chosen association tracker)
+
+### Minimal wrapper code (core call logic)
+The following scripts are designed to be copy-pasted into this repo under a new folder `tracking/`. They demonstrate exactly how YOLO11 is called for:
+1) detection on denoised frames and
+2) tracking on a video/stream.
+
+#### `tracking/yolo11_detect_images.py`
+```python
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+"""
+Run YOLO11 detection on a folder of images (e.g., denoised STEM frames).
+Outputs: annotated images + prediction TXT (Ultralytics default structure).
+"""
+
+import argparse
+from pathlib import Path
+from ultralytics import YOLO
+
+def parse_args():
+    p = argparse.ArgumentParser()
+    p.add_argument("--weights", type=str, default="yolo11n.pt",
+                   help="YOLO11 weights path (e.g., yolo11n.pt or weights/yolo11_atom.pt)")
+    p.add_argument("--source", type=str, required=True,
+                   help="Image folder or a glob pattern, e.g., outputs_denoised/*.png")
+    p.add_argument("--out", type=str, default="runs/yolo11_detect",
+                   help="Output directory root (Ultralytics will create subfolders)")
+    p.add_argument("--imgsz", type=int, default=640)
+    p.add_argument("--conf", type=float, default=0.25)
+    p.add_argument("--iou", type=float, default=0.7)
+    p.add_argument("--device", type=str, default="0",
+                   help="0 / 0,1 / cpu")
+    return p.parse_args()
+
+def main():
+    args = parse_args()
+    Path(args.out).mkdir(parents=True, exist_ok=True)
+
+    model = YOLO(args.weights)
+    model.predict(
+        source=args.source,
+        imgsz=args.imgsz,
+        conf=args.conf,
+        iou=args.iou,
+        device=args.device,
+        project=args.out,
+        name="pred",
+        save=True,       # save annotated images
+        save_txt=True,   # save labels in YOLO format
+        save_conf=True
+    )
+
+if __name__ == "__main__":
+    main()
+```
+
+#### `tracking/yolo11_track_video.py`
+```python
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+"""
+Run YOLO11 tracking (ByteTrack) on a video or stream.
+This uses Ultralytics built-in track mode with tracker config (bytetrack.yaml).
+"""
+
+import argparse
+from pathlib import Path
+from ultralytics import YOLO
+
+def parse_args():
+    p = argparse.ArgumentParser()
+    p.add_argument("--weights", type=str, default="yolo11n.pt")
+    p.add_argument("--source", type=str, required=True,
+                   help="Video path or stream (e.g., video.mp4). For webcam use source=0")
+    p.add_argument("--tracker", type=str, default="bytetrack.yaml",
+                   help="Ultralytics tracker config (bytetrack.yaml or botsort.yaml)")
+    p.add_argument("--out", type=str, default="runs/yolo11_track")
+    p.add_argument("--imgsz", type=int, default=640)
+    p.add_argument("--conf", type=float, default=0.25)
+    p.add_argument("--iou", type=float, default=0.7)
+    p.add_argument("--device", type=str, default="0")
+    return p.parse_args()
+
+def main():
+    args = parse_args()
+    Path(args.out).mkdir(parents=True, exist_ok=True)
+
+    model = YOLO(args.weights)
+    model.track(
+        source=args.source,
+        tracker=args.tracker,
+        imgsz=args.imgsz,
+        conf=args.conf,
+        iou=args.iou,
+        device=args.device,
+        project=args.out,
+        name="track",
+        save=True,      # save annotated video
+        save_txt=True,  # save per-frame tracks to txt
+        persist=True
+    )
+
+if __name__ == "__main__":
+    main()
+```
+
+> If you trained a custom atom detector, replace `yolo11n.pt` with your checkpoint path (e.g., `weights/yolo11_atom.pt`).  
+> If you prefer a different association tracker, you may swap `bytetrack.yaml` accordingly.
 
 ---
 
@@ -63,6 +189,9 @@ Trajectory statistics (vibration vs hopping, directionality, energy landscape pr
 ├── tools
 │   ├── data_pre.py
 │   └── utils.py
+├── tracking              # (recommended) external detection/tracking wrappers
+│   ├── yolo11_detect_images.py
+│   └── yolo11_track_video.py
 ├── train.py
 └── test.py
 ```
@@ -141,7 +270,6 @@ python test.py
 
 ---
 
-
 ### 4.4 Online Demo (Coze Bot)
 
 **Note:** This model has been deployed as an AI agent on the Coze platform, allowing users to perform denoising through conversational interaction without local installation.
@@ -159,6 +287,31 @@ python test.py
 - We recommend focusing on single-image denoising per conversation session
 - For the data images in this demo, you can choose any image from Zenodo DOI / link: https://zenodo.org/records/17980551.
 
+---
+
+### 4.5 Detection & Tracking (YOLO11 + ByteTrack, External)
+
+This repository focuses on denoising. For detection/tracking in the full DAI2SY pipeline, we call **Ultralytics YOLO11** and (optionally) **ByteTrack** for association.
+
+#### 4.5.1 Install external tracking dependency
+```bash
+pip install -U ultralytics
+```
+
+#### 4.5.2 Detect atoms on denoised frames (image folder)
+```bash
+python tracking/yolo11_detect_images.py   --source "model_save/--TIME--KET_UNet--/--HH--MM--/*.png"   --weights yolo11n.pt   --conf 0.25 --imgsz 640
+```
+
+#### 4.5.3 Track across frames (video/stream)
+```bash
+python tracking/yolo11_track_video.py   --source path/to/video.mp4   --weights yolo11n.pt   --tracker bytetrack.yaml
+```
+
+> For custom atom weights, replace `yolo11n.pt` with `weights/yolo11_atom.pt`.
+
+---
+
 ## 5. Environment & Dependencies
 
 ### Recommended
@@ -169,6 +322,9 @@ python test.py
 - pillow (PIL)
 - openpyxl
 - scikit-image
+
+Optional (for external detection/tracking):
+- ultralytics
 
 Example:
 ```bash
@@ -362,6 +518,8 @@ Please cite the DAI2SY paper if you use this work.
 ## 12. License
 Academic research use only (license will be finalized upon public release).
 
+**Note on external dependencies:** Ultralytics YOLO is licensed under **AGPL-3.0 by default**; if you use YOLO11 in your pipeline, please comply with the upstream license.
+
 ---
 
 ## 13. Contact
@@ -375,8 +533,3 @@ For questions, bug reports, or collaboration:
 
 ### Acknowledgement
 This repository implements the denoising component (**KET-UNet**) of the broader **DAI2SY** framework for AI-enabled atomic-scale dynamics analysis in STEM.
-
-
-
-
-
